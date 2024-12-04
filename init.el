@@ -278,7 +278,6 @@
 		       "--header-insertion=never"
 		       "--header-insertion-decorators=0"))))
 
-
 (defun fst/hook-cpp-mode ()
   (eglot-ensure)
   (company-mode t)) 
