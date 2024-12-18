@@ -81,9 +81,29 @@ I am using the [[https://github.com/tonsky/FiraCode][Fira Code]] and [[https://f
 
 #+end_src
 
+** Todo, Error, etc Marker
+
+Using [[https://github.com/tarsius/hl-todo][hl-todo]] to mark all the todo comment inside of a source code we can easier to list what need to be done in the future when opening the source code again. It also marked other stuff such as error, fixme and other you can mention by adding the list on the elisp.
+
+#+begin_src emacs-lisp
+
+  (use-package hl-todo
+  :hook (prog-mode . hl-todo-mode)
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+	hl-todo-keyword-faces
+	`(("TODO"       warning bold)
+	  ("FIXME"      error bold)
+	  ("HACK"       font-lock-constant-face bold)
+	  ("REVIEW"     font-lock-keyword-face bold)
+	  ("NOTE"       success bold)
+	  ("DEPRECATED" font-lock-doc-face bold))))
+  
+#+end_src
+
 * Keybinding Configuration
 
-This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/noctuid/general.el][general.el]] is used for easy keybinding configuration that integrates well with which-key.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode.
+This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/noctuid/general.el][general.el]] is used for easy keybinding configuration that integrates well with which-key.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode. Therefore, to enable undo functionality we also add undo tree to enable ==C-r== keybinds. 
 
 #+begin_src emacs-lisp
 
@@ -123,6 +143,13 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
     :after evil
     :config
     (evil-collection-init))
+
+  (use-package undo-tree
+  :ensure t
+  :after evil
+  :config
+  (evil-set-undo-system 'undo-tree)
+  (global-undo-tree-mode 1))
 
 #+end_src
 
@@ -316,12 +343,12 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
 
 #+begin_src emacs-lisp
 
-  (use-package tramp
-  :config
-  ;; Use the remote machine's PATH
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-  ;; Reduce verbosity for better performance
-  (setq tramp-verbose 1))
+	  (use-package tramp
+	  :config
+	  ;; Use the remote machine's PATH
+	  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+	  ;; Reduce verbosity for better performance
+	  (setq tramp-verbose 1))
 
 #+end_src
 
@@ -353,8 +380,6 @@ The =which-key= integration adds helpful descriptions of the various keys so you
       :remote? t
       :server-id 'clangd-id))
    )
-    ;; Set up TRAMP to access remote files, for example over SSH:
-    (setq tramp-default-method "ssh")
 
 #+end_src
 
@@ -437,16 +462,6 @@ This is a basic configuration for the TypeScript language so that =.dart= files 
 
 #+begin_src emacs-lisp
 
-  (setq package-selected-packages 
-    '(dart-mode lsp-mode lsp-dart lsp-treemacs flycheck company
-      ;; Optional packages
-      lsp-ui company hover))
-
-  (when (cl-find-if-not #'package-installed-p package-selected-packages)
-    (package-refresh-contents)
-    (mapc #'package-install package-selected-packages))
-    (add-hook 'dart-mode-hook 'lsp)
-
   (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024))
 
@@ -493,3 +508,18 @@ Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https:/
 
 #+end_src
 
+* Utilities
+
+** Wakatime
+Installing [[https://github.com/wakatime/wakatime-mode][wakatime]] to see how many hours you have been coding stuffs and see what editor being used. Not really important but can be used to see your coding statistics.
+
+#+begin_src emacs-lisp
+
+  ;; WakaTime Configuration
+(use-package wakatime-mode
+  :ensure t  ; Automatically install if not present
+  :config
+  (setq wakatime-cli-path "~/.wakatime")  ; Replace with the path to your WakaTime client
+  (wakatime-mode 1))  ; Enable WakaTime mode
+
+#+end_src
