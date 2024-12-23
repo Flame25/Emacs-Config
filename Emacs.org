@@ -474,10 +474,14 @@ This is a basic configuration for the TypeScript language so that =.dart= files 
 
 *** Clangd
 
-Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https://github.com/joaotavora/eglot][eglot]] so that it will be activate when you run =.cpp= and =.c= files. We're also using [[https://github.com/company-mode/company-mode][company-mode]] also running when eglot enabled for auto completion. 
+Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https://github.com/joaotavora/eglot][eglot]] so that it will be activate when you run =.cpp= and =.c= files. We're also using [[https://github.com/company-mode/company-mode][company-mode]] also running when eglot enabled for auto completion. Also to make it work clangd need a ==compile_commands.json== in the root of the project. If for example the root of the project is not there you need to create a linker from the location of the ==compile_commands.json== to the root of the project.
+
+#+begin_src shell
+  ln -s {location of the compile_commands.json} {root project}
+#+end_src
 
 #+begin_src emacs-lisp
-  (progn
+    (progn
       (customize-set-variable 'eglot-autoshutdown t)
       (customize-set-variable 'eglot-extend-to-xref t)
       (customize-set-variable 'eglot-ignored-server-capabilities
@@ -488,7 +492,6 @@ Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https:/
 	  (add-to-list 'eglot-server-programs
 	      '(c-mode c++-mode
 		   . ("clangd"
-			 "-j=4"
 			 "--malloc-trim"
 			 "--log=error"
 			 "--background-index"
@@ -505,21 +508,29 @@ Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https:/
 
   (add-hook 'c-mode-hook #'fst/hook-cpp-mode)
   (add-hook 'c++-mode-hook #'fst/hook-cpp-mode))
-
 #+end_src
 
 * Utilities
+
+** Projectiles
+
+#+begin_src emacs-lisp
+#+end_src
 
 ** Wakatime
 Installing [[https://github.com/wakatime/wakatime-mode][wakatime]] to see how many hours you have been coding stuffs and see what editor being used. Not really important but can be used to see your coding statistics.
 
 #+begin_src emacs-lisp
 
-  ;; WakaTime Configuration
-(use-package wakatime-mode
-  :ensure t  ; Automatically install if not present
-  :config
-  (setq wakatime-cli-path "~/.wakatime")  ; Replace with the path to your WakaTime client
-  (wakatime-mode 1))  ; Enable WakaTime mode
+    ;; WakaTime Configuration
+  (use-package wakatime-mode
+    :ensure t  ; Automatically install if not present
+    :config
+    (setq wakatime-cli-path "~/wakatime-cli")  ; Replace with the path to your WakaTime client
+      ;; Use auth-source to read the API key securely
+    (setq wakatime-api-key (with-temp-buffer
+			   (insert-file-contents (expand-file-name "~/.wakatime-api-key"))
+			   (buffer-string)))
+    (wakatime-mode 1))  ; Enable WakaTime mode
 
 #+end_src

@@ -48,6 +48,18 @@
 ;; Set the fixed pitch face
 (set-face-attribute 'fixed-pitch nil :font "CaskaydiaCove Nerd Font Mono" :height fst/default-font-size)
 
+(use-package hl-todo
+:hook (prog-mode . hl-todo-mode)
+:config
+(setq hl-todo-highlight-punctuation ":"
+      hl-todo-keyword-faces
+      `(("TODO"       warning bold)
+	("FIXME"      error bold)
+	("HACK"       font-lock-constant-face bold)
+	("REVIEW"     font-lock-keyword-face bold)
+	("NOTE"       success bold)
+	("DEPRECATED" font-lock-doc-face bold))))
+
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
@@ -84,6 +96,13 @@
   :after evil
   :config
   (evil-collection-init))
+
+(use-package undo-tree
+:ensure t
+:after evil
+:config
+(evil-set-undo-system 'undo-tree)
+(global-undo-tree-mode 1))
 
 (use-package doom-themes
   :init (load-theme 'doom-dracula t))
@@ -211,8 +230,6 @@
     :remote? t
     :server-id 'clangd-id))
  )
-  ;; Set up TRAMP to access remote files, for example over SSH:
-  (setq tramp-default-method "ssh")
 
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
@@ -238,16 +255,6 @@
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
-(setq package-selected-packages 
-  '(dart-mode lsp-mode lsp-dart lsp-treemacs flycheck company
-    ;; Optional packages
-    lsp-ui company hover))
-
-(when (cl-find-if-not #'package-installed-p package-selected-packages)
-  (package-refresh-contents)
-  (mapc #'package-install package-selected-packages))
-  (add-hook 'dart-mode-hook 'lsp)
-
 (setq gc-cons-threshold (* 100 1024 1024)
     read-process-output-max (* 1024 1024))
 
@@ -267,7 +274,6 @@
 	(add-to-list 'eglot-server-programs
 	    '(c-mode c++-mode
 		 . ("clangd"
-		       "-j=4"
 		       "--malloc-trim"
 		       "--log=error"
 		       "--background-index"
@@ -284,3 +290,16 @@
 
 (add-hook 'c-mode-hook #'fst/hook-cpp-mode)
 (add-hook 'c++-mode-hook #'fst/hook-cpp-mode))
+
+
+
+;; WakaTime Configuration
+(use-package wakatime-mode
+  :ensure t  ; Automatically install if not present
+  :config
+  (setq wakatime-cli-path "~/wakatime-cli")  ; Replace with the path to your WakaTime client
+    ;; Use auth-source to read the API key securely
+  (setq wakatime-api-key (with-temp-buffer
+			 (insert-file-contents (expand-file-name "~/.wakatime-api-key"))
+			 (buffer-string)))
+  (wakatime-mode 1))  ; Enable WakaTime mode
