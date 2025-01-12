@@ -11,6 +11,7 @@
 (defvar fst/default-variable-font-size 110)
 
 #+end_src
+
 * Tips for Use
 
 In this document I've added links in many places that lead you to documentation for the various packages we use.  If you're looking at this file in Emacs, you can put your cursor on a link and press =C-c C-o= or run =M-x org-open-at-point= to open the link in your web browser.
@@ -76,8 +77,11 @@ I am using the [[https://github.com/tonsky/FiraCode][Fira Code]] and [[https://f
 
   (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height fst/default-font-size)
 
+
   ;; Set the fixed pitch face
   (set-face-attribute 'fixed-pitch nil :font "CaskaydiaCove Nerd Font Mono" :height fst/default-font-size)
+
+  (set-fontset-font t 'unicode "Noto Color Emoji" nil 'prepend)
 
 #+end_src
 
@@ -101,6 +105,84 @@ Using [[https://github.com/tarsius/hl-todo][hl-todo]] to mark all the todo comme
   
 #+end_src
 
+** Mini Buffer
+
+This section is optional just to make emacs minibuffer fits with the NANO mode-line by using [[https://github.com/muffinmad/emacs-mini-frame][emacs-mini-frame]]
+
+#+begin_src emacs-lisp
+
+ ;; (use-package mini-frame
+ ;;   :ensure t
+ ;;   )
+
+
+ ;; (require 'mini-frame)
+
+ ;; (with-eval-after-load 'mini-frame
+
+ ;;   ;; Miniframe at the bottom for a nicer display
+ ;;   (setq mini-frame-show-parameters
+ ;;	  `((left . 0.5)
+ ;;	    (top . 1.0)
+ ;;	    (width . 1.0)
+ ;;	    (height . 10)
+ ;;	    (left-fringe . 12)
+ ;;	    (right-fringe .12)
+ ;;	    (child-frame-border-width . 0)
+ ;;	    (internal-border-width . 0)
+ ;;	    ))
+
+ ;;   (with-eval-after-load 'ivy
+ ;;     (setq ivy-height 9)
+ ;;     ;; See https://github.com/abo-abo/swiper/issues/2383
+ ;;     (setcdr (assoc t ivy-format-functions-alist) #'ivy-format-function-line)
+ ;;     (setq mini-frame-ignore-commands
+ ;;	    '("edebug-eval-expression" debugger-eval-expression))
+
+ ;;     ;; (setq mini-frame-resize 'grow-only) ;; -> buggy as of 01/05/2021
+ ;;     (setq mini-frame-resize 'not-set)
+ ;;     ;; (setq mini-frame-resize nil)
+ ;;     (add-hook 'minibuffer-setup-hook
+ ;;		(lambda ()
+ ;;		  (overlay-put (make-overlay (point-min) (+ (point-min) 1))
+ ;;			       'before-string
+ ;;			       (propertize "\n" 'face `(:extend t
+ ;;								:height .5)))))))
+
+ ;;   (mini-frame-mode 1)
+
+#+end_src
+
+** Ivy-Postframe
+
+#+begin_src emacs-lisp
+
+  (use-package ivy-posframe
+    :ensure t
+    )
+
+  (require 'ivy-posframe)
+  ;; display at `ivy-posframe-style'
+  (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
+  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
+  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-window-center)))
+  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-bottom-left)))
+  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-window-bottom-left)))
+  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-top-center)))
+  (ivy-posframe-mode 1)
+
+#+end_src
+
+** Custome Theme (Everforest)
+
+[[https://github.com/Theory-of-Everything/everforest-emacs][Everforest]] is not yet on MELPA so manual installation is required.
+
+#+begin_src emacs-lisp
+
+  (add-to-list 'custom-theme-load-path "~/.config/emacs/everforest-theme/")
+  (load-theme 'everforest-hard-dark t)
+
+#+end_src
 * Keybinding Configuration
 
 This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/noctuid/general.el][general.el]] is used for easy keybinding configuration that integrates well with which-key.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode. Therefore, to enable undo functionality we also add undo tree to enable ==C-r== keybinds. 
@@ -159,9 +241,16 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+begin_src emacs-lisp
 
-(use-package doom-themes
-  :init (load-theme 'doom-dracula t))
+;;(use-package doom-themes)
 
+#+end_src
+
+[[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]] is another common theme that have been used by many people.
+
+#+begin_src emacs-lisp
+
+  ;;(use-package gruvbox-theme)
+  
 #+end_src
 
 ** Better Modeline
@@ -172,11 +261,47 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+begin_src emacs-lisp
 
-(use-package all-the-icons)
+  (use-package all-the-icons)
 
-(use-package doom-modeline
-  :init (doom-modeline-mode 1)
-  :custom ((doom-modeline-height 15)))
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1)
+    :config (setq doom-modeline-bar-width 4))
+  (setq evil-normal-state-tag   (propertize "[Normal]" 'face '((:background "green" :foreground "black")))
+      evil-emacs-state-tag    (propertize "[Emacs]" 'face '((:background "orange" :foreground "black")))
+      evil-insert-state-tag   (propertize "[Insert]" 'face '((:background "red") :foreground "white"))
+      evil-motion-state-tag   (propertize "[Motion]" 'face '((:background "blue") :foreground "white"))
+      evil-visual-state-tag   (propertize "[Visual]" 'face '((:background "grey80" :foreground "black")))
+      evil-operator-state-tag (propertize "[Operator]" 'face '((:background "purple"))))
+  (setq doom-modeline-modal-icon nil)
+
+  ;; (use-package mood-line
+  ;; :config
+  ;; ;; Enable mood-line
+  ;; (mood-line-mode)
+  ;; ;; Use pretty Fira Code-compatible glyphs
+  ;; (setq mood-line-glyph-alist mood-line-glyphs-unicode)
+  ;; (setq mood-line-format mood-line-format-default-extended))
+
+  ;;(use-package nano-modeline
+  ;;  :ensure t
+  ;;  :config
+  ;;  (setopt nano-modeline-position 'nano-modeline-footer)
+
+  ;;  (add-hook 'prog-mode-hook            #'nano-modeline-prog-mode)
+  ;;  (add-hook 'text-mode-hook            #'nano-modeline-text-mode)
+  ;;  (add-hook 'org-mode-hook             #'nano-modeline-org-mode)
+  ;;  (add-hook 'pdf-view-mode-hook        #'nano-modeline-pdf-mode)
+  ;;  (add-hook 'mu4e-headers-mode-hook    #'nano-modeline-mu4e-headers-mode)
+  ;;  (add-hook 'mu4e-view-mode-hook       #'nano-modeline-mu4e-message-mode)
+  ;;  (add-hook 'elfeed-show-mode-hook     #'nano-modeline-elfeed-entry-mode)
+  ;;  (add-hook 'elfeed-search-mode-hook   #'nano-modeline-elfeed-search-mode)
+  ;;  (add-hook 'term-mode-hook            #'nano-modeline-term-mode)
+  ;;  (add-hook 'xwidget-webkit-mode-hook  #'nano-modeline-xwidget-mode)
+  ;;  (add-hook 'messages-buffer-mode-hook #'nano-modeline-message-mode)
+  ;;  (add-hook 'org-capture-mode-hook     #'nano-modeline-org-capture-mode)
+  ;;  (add-hook 'org-agenda-mode-hook      #'nano-modeline-org-agenda-mode))
+
+
 
 #+end_src
 
@@ -200,35 +325,46 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+begin_src emacs-lisp
 
-(use-package diminish)
+  (use-package diminish)
 
-(use-package swiper
-  :after ivy
-  :ensure t)
+  (use-package swiper
+    :after ivy
+    :ensure t)
 
-(use-package counsel
-  :after ivy
-  :ensure t)
+  (use-package counsel
+    :ensure t
+    :bind (("M-x" . counsel-M-x)
+	   ("C-x C-f" . counsel-find-file)
+	   ("C-x b" . counsel-switch-buffer)
+	   ("C-x C-r" . counsel-recentf)))
 
-(use-package ivy
-  :ensure t
-  :demand t
-  :diminish
-  :bind (("C-s" . swiper)
-   :map ivy-minibuffer-map
-   ("TAB" . ivy-alt-done)
-   ("C-l" . ivy-alt-done)
-   ("C-j" . ivy-next-line)
-   ("C-k" . ivy-previous-line)
-   :map ivy-switch-buffer-map
-   ("C-k" . ivy-previous-line)
-   ("C-l" . ivy-done)
-   ("C-d" . ivy-switch-buffer-kill)
-   :map ivy-reverse-i-search-map
-   ("C-k" . ivy-previous-line)
-   ("C-d" . ivy-reverse-i-search-kill))
-  :config
-  (ivy-mode t))
+  (use-package ivy
+    :ensure t
+    :demand t
+    :diminish
+    :bind (("C-s" . swiper)
+	   :map ivy-minibuffer-map
+	   ("TAB" . ivy-alt-done)
+	   ("C-l" . ivy-alt-done)
+	   ("C-j" . ivy-next-line)
+	   ("C-k" . ivy-previous-line)
+	   :map ivy-switch-buffer-map
+	   ("C-k" . ivy-previous-line)
+	   ("C-l" . ivy-done)
+	   ("C-d" . ivy-switch-buffer-kill)
+	   :map ivy-reverse-i-search-map
+	   ("C-k" . ivy-previous-line)
+	   ("C-d" . ivy-reverse-i-search-kill))
+    :config
+    (ivy-mode t))
+
+  (use-package ivy-rich
+    :ensure t
+    :init
+    (ivy-rich-mode 1)
+    :config
+    (setq ivy-rich-path-style 'abbrev))
+
 
 #+end_src
 
@@ -338,7 +474,27 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
 #+RESULTS:
 | (lambda nil (add-hook 'after-save-hook #'efs/org-babel-tangle-config)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-fold-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | (lambda nil (display-line-numbers-mode 0)) |
 
+** Table of Contents
+
+#+begin_src emacs-lisp
+  (use-package toc-org
+    :ensure t)
+
+  (if (require 'toc-org nil t)
+    (progn
+      (add-hook 'org-mode-hook 'toc-org-mode))
+  (warn "toc-org not found"))
+
+#+end_src
+
 * Development
+** VTerm
+
+#+begin_src emacs-lisp
+(use-package vterm
+    :ensure t)
+#+end_src
+
 ** TRAMP
 
 #+begin_src emacs-lisp
@@ -482,7 +638,6 @@ Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https:/
 
 #+begin_src emacs-lisp
     (progn
-      (customize-set-variable 'eglot-autoshutdown t)
       (customize-set-variable 'eglot-extend-to-xref t)
       (customize-set-variable 'eglot-ignored-server-capabilities
 	  (quote (:documentFormattingProvider :documentRangeFormattingProvider)))
@@ -511,26 +666,19 @@ Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https:/
 #+end_src
 
 * Utilities
-
-** Projectiles
-
-#+begin_src emacs-lisp
-#+end_src
-
 ** Wakatime
+
 Installing [[https://github.com/wakatime/wakatime-mode][wakatime]] to see how many hours you have been coding stuffs and see what editor being used. Not really important but can be used to see your coding statistics.
 
 #+begin_src emacs-lisp
 
-    ;; WakaTime Configuration
+  ;; WakaTime Configuration
   (use-package wakatime-mode
     :ensure t  ; Automatically install if not present
     :config
-    (setq wakatime-cli-path "~/wakatime-cli")  ; Replace with the path to your WakaTime client
-      ;; Use auth-source to read the API key securely
     (setq wakatime-api-key (with-temp-buffer
-			   (insert-file-contents (expand-file-name "~/.wakatime-api-key"))
-			   (buffer-string)))
-    (wakatime-mode 1))  ; Enable WakaTime mode
+			     (insert-file-contents (expand-file-name "~/.wakatime-api-key"))
+			     (buffer-string)))
+    (global-wakatime-mode 1))  ; Enable WakaTime mode
 
 #+end_src
