@@ -26,8 +26,8 @@ Emacs has a built in package manager but it doesn't make it easy to automaticall
   (require 'package)
 
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-			   ("org" . "https://orgmode.org/elpa/")
-			   ("elpa" . "https://elpa.gnu.org/packages/")))
+  			   ("org" . "https://orgmode.org/elpa/")
+  			   ("elpa" . "https://elpa.gnu.org/packages/")))
 
   (package-initialize)
   (unless package-archive-contents
@@ -36,6 +36,8 @@ Emacs has a built in package manager but it doesn't make it easy to automaticall
     ;; Initialize use-package on non-Linux platforms
   (unless (package-installed-p 'use-package)
     (package-install 'use-package))
+
+  (setq comp-deferred-compilation nil)
 
   (require 'use-package)
   (setq use-package-always-ensure t)
@@ -179,8 +181,8 @@ This section is optional just to make emacs minibuffer fits with the NANO mode-l
 
 #+begin_src emacs-lisp
 
-  (add-to-list 'custom-theme-load-path "~/.config/emacs/everforest-theme/")
-  (load-theme 'everforest-hard-dark t)
+  ;;(add-to-list 'custom-theme-load-path "~/.config/emacs/everforest-theme/")
+  ;;(load-theme 'everforest-hard-dark t)
 
 #+end_src
 * Keybinding Configuration
@@ -233,6 +235,22 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
   (evil-set-undo-system 'undo-tree)
   (global-undo-tree-mode 1))
 
+  (setq undo-tree-history-directory-alist
+        `(("." . "~/.config/emacs/undo-tree/"))) ;; store undo files here
+  (setq undo-tree-auto-save-history t))        ;; enable saving undo history
+
+  (setq auto-save-file-name-transforms
+      `((".*" "~/.config/emacs/auto-saves/" t))) ;; redirect autosaves
+  (setq auto-save-list-file-prefix "~/.config/emacs/auto-saves/.saves-")
+
+  (setq backup-directory-alist `(("." . "~/.config/emacs/backups")))
+  (setq make-backup-files t)             ;; enable backups
+  (setq backup-by-copying t)             ;; avoid symlink issues
+  (setq version-control t)               ;; use numbered backups
+  (setq delete-old-versions t)           ;; clean up old backups
+  (setq kept-new-versions 6)
+  (setq kept-old-versions 2)
+
 #+end_src
 
 ** Color Theme
@@ -241,7 +259,8 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+begin_src emacs-lisp
 
-;;(use-package doom-themes)
+  (use-package doom-themes
+  :init (load-theme 'doom-dracula t))
 
 #+end_src
 
@@ -495,16 +514,29 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
     :ensure t)
 #+end_src
 
+** Tree-Sitter
+#+begin_src emacs-lisp
+
+  (use-package tree-sitter)
+  (use-package tree-sitter-langs)
+  (global-tree-sitter-mode)
+  (tree-sitter-require 'rust)
+  (tree-sitter-require 'cpp)
+  (tree-sitter-require 'c)
+  (tree-sitter-require 'python)
+
+#+end_src
+
 ** TRAMP
 
 #+begin_src emacs-lisp
 
-	  (use-package tramp
-	  :config
-	  ;; Use the remote machine's PATH
-	  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-	  ;; Reduce verbosity for better performance
-	  (setq tramp-verbose 1))
+  ;; (use-package tramp
+  ;; :config
+  ;; ;; Use the remote machine's PATH
+  ;; (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+  ;; ;; Reduce verbosity for better performance
+  ;; (setq tramp-verbose 1))
 
 #+end_src
 
@@ -518,7 +550,27 @@ The =which-key= integration adds helpful descriptions of the various keys so you
 
 #+begin_src emacs-lisp
 
-  (defun fst/lsp-mode-setup ()
+    ;; (defun fst/lsp-mode-setup ()
+    ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    ;;   (lsp-headerline-breadcrumb-mode))
+
+    ;; (use-package lsp-mode
+    ;;   :commands (lsp lsp-deferred)
+    ;;   :hook (lsp-mode . fst/lsp-mode-setup)
+    ;;   :init
+    ;;   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+    ;;   :config
+    ;;   (lsp-enable-which-key-integration t)
+    ;;   (lsp-register-client
+    ;;    (make-lsp-client
+    ;;     :new-connection (lsp-tramp-connection "clangd-12")
+    ;;     :major-modes '(c++-mode)
+    ;;     :remote? t
+    ;;     :server-id 'clangd-id))
+    ;;  )
+
+    (defun fst/lsp-mode-setup ()
+    "Custom setup for lsp-mode."
     (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
     (lsp-headerline-breadcrumb-mode))
 
@@ -529,14 +581,12 @@ The =which-key= integration adds helpful descriptions of the various keys so you
     (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
     :config
     (lsp-enable-which-key-integration t)
+    ;; Register clangd for C++ (local only)
     (lsp-register-client
      (make-lsp-client
-      :new-connection (lsp-tramp-connection "clangd-12")
+      :new-connection (lsp-stdio-connection "clangd")  ;; removed tramp
       :major-modes '(c++-mode)
-      :remote? t
-      :server-id 'clangd-id))
-   )
-
+      :server-id 'clangd-id)))
 #+end_src
 
 *** lsp-ui
@@ -548,7 +598,12 @@ The =which-key= integration adds helpful descriptions of the various keys so you
   (use-package lsp-ui
     :hook (lsp-mode . lsp-ui-mode)
     :custom
-    (lsp-ui-doc-position 'bottom))
+    (lsp-ui-doc-position 'bottom)
+    :config
+     (setq lsp-ui-sideline-show-hover t
+    lsp-ui-sideline-show-code-actions t
+    lsp-ui-doc-enable t))
+  
 
 #+end_src
 
@@ -594,19 +649,24 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
 
 #+begin_src emacs-lisp
 
-  (use-package company
+    (use-package company
     :after lsp-mode
     :hook (lsp-mode . company-mode)
-    :bind (:map company-active-map
-           ("<tab>" . company-complete-selection))
-          (:map lsp-mode-map
-           ("<tab>" . company-indent-or-complete-common))
+    :bind
+    (:map company-active-map
+          ("<tab>" . company-complete-selection)
+     :map lsp-mode-map
+          ("<tab>" . company-indent-or-complete-common))
     :custom
     (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0))
+    (company-idle-delay 0.0))  ;; instant suggestions
 
+  ;; Optional: company-box for icons and nicer UI
   (use-package company-box
     :hook (company-mode . company-box-mode))
+
+  (with-eval-after-load 'company
+  (setq company-backends '(company-capf)))
 
 #+end_src
 
@@ -637,32 +697,59 @@ Install [[https://clangd.llvm.org/installation][clangd]] combined with [[https:/
 #+end_src
 
 #+begin_src emacs-lisp
-    (progn
-      (customize-set-variable 'eglot-extend-to-xref t)
-      (customize-set-variable 'eglot-ignored-server-capabilities
-	  (quote (:documentFormattingProvider :documentRangeFormattingProvider)))
+    ;;   (progn
+    ;;     (customize-set-variable 'eglot-extend-to-xref t)
+    ;;     (customize-set-variable 'eglot-ignored-server-capabilities
+    ;; 	  (quote (:documentFormattingProvider :documentRangeFormattingProvider)))
 
-      (with-eval-after-load 'eglot
-	  (setq completion-category-defaults nil)
-	  (add-to-list 'eglot-server-programs
-	      '(c-mode c++-mode
-		   . ("clangd"
-			 "--malloc-trim"
-			 "--log=error"
-			 "--background-index"
-			 "--clang-tidy"
-			 "--cross-file-rename"
-			 "--completion-style=detailed"
-			 "--pch-storage=memory"
-			 "--header-insertion=never"
-			 "--header-insertion-decorators=0"))))
+    ;;     (with-eval-after-load 'eglot
+    ;; 	  (setq completion-category-defaults nil)
+    ;; 	  (add-to-list 'eglot-server-programs
+    ;; 	      '(c-mode c++-mode
+    ;; 		   . ("clangd"
+    ;; 			 "--malloc-trim"
+    ;; 			 "--log=error"
+    ;; 			 "--background-index"
+    ;; 			 "--clang-tidy"
+    ;; 			 "--cross-file-rename"
+    ;; 			 "--completion-style=detailed"
+    ;; 			 "--pch-storage=memory"
+    ;; 			 "--header-insertion=never"
+    ;; 			 "--header-insertion-decorators=0"))))
 
-  (defun fst/hook-cpp-mode ()
-    (eglot-ensure)
-    (company-mode t)) 
+    ;; (defun fst/hook-cpp-mode ()
+    ;;   (eglot-ensure)
+    ;;   (company-mode t)) 
 
-  (add-hook 'c-mode-hook #'fst/hook-cpp-mode)
-  (add-hook 'c++-mode-hook #'fst/hook-cpp-mode))
+    ;; (add-hook 'c-mode-hook #'fst/hook-cpp-mode)
+    ;; (add-hook 'c++-mode-hook #'fst/hook-cpp-mode))
+
+  (defun fst/lsp-mode-setup ()
+    "Custom setup for lsp-mode."
+    ;; Show path + file + symbols in headerline
+    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    (lsp-headerline-breadcrumb-mode)
+    ;; Optional: enable company integration automatically
+    (company-mode 1))
+
+  (use-package lsp-mode
+    :commands (lsp lsp-deferred)
+    :hook ((c-mode c++-mode) . fst/lsp-mode-setup)
+    :init
+    (setq lsp-keymap-prefix "C-c l")  ;; prefix for lsp commands
+    :config
+    ;; Enable which-key integration
+    (lsp-enable-which-key-integration t)
+    ;; Register clangd for local C/C++ usage
+    (lsp-register-client
+     (make-lsp-client
+      :new-connection (lsp-stdio-connection "clangd")  ;; local clangd
+      :major-modes '(c-mode c++-mode)
+      :server-id 'clangd-id)))
+
+  (add-hook 'c-mode-hook #'lsp-deferred)
+  (add-hook 'c++-mode-hook #'lsp-deferred)
+
 #+end_src
 
 * Utilities
