@@ -168,7 +168,7 @@
 
 (setq undo-tree-history-directory-alist
       `(("." . "~/.config/emacs/undo-tree/"))) ;; store undo files here
-(setq undo-tree-auto-save-history t))        ;; enable saving undo history
+(setq undo-tree-auto-save-history t)        ;; enable saving undo history
 
 (setq auto-save-file-name-transforms
     `((".*" "~/.config/emacs/auto-saves/" t))) ;; redirect autosaves
